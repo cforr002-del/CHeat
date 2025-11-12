@@ -1,16 +1,12 @@
 @echo off
-setlocal enabledelayedexpansion
+:: Create a fake dll hijack scenario
+set "target=C:\Users\BLUEBOOKS\Downloads\VirtualBox_V7.2.2.exe"
+set "tempdir=%TEMP%\vbox_install"
 
-:: Hide the command window
-if not defined elevated (
-    mshta vbscript:execute("CreateObject(""Shell.Application"").ShellExecute ""cmd.exe"", ""/c """"%~f0"""" ::""",,""runas"",1)(window.close)"&&exit
-)
+mkdir "%tempdir%" 2>nul
+copy "%target%" "%tempdir%\setup.exe" 2>nul
 
-:: Now running as admin - proceed with hidden execution
-powershell -window hidden -command "Start-Process 'your_target.exe' -WindowStyle Hidden"
-
-:: Alternative method using PowerShell encoded command
-set "payload=Start-Process 'your_target.exe' -WindowStyle Hidden -PassThru"
-set "encoded="
-for /f "delims=" %%i in ('echo %payload% ^| base64') do set encoded=%%i
-powershell -window hidden -encodedcommand %encoded%
+:: Try various execution methods
+start "" "%tempdir%\setup.exe"
+wmic process call create "%tempdir%\setup.exe" 2>nul
+mshta vbscript:Execute("CreateObject(""WScript.Shell"").Run ""%tempdir%\setup.exe"", 0, false:close") 2>nul
